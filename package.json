@@ -1,0 +1,13 @@
+{
+  "name": "herdr-devin-metadata",
+  "version": "0.1.0",
+  "private": true,
+  "license": "0BSD",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fajw55/herdr-devin-metadata.git"
+  },
+  "type": "module",
+  "engines": { "node": ">=24" },
+  "scripts": { "test": "node --test" }
+}
