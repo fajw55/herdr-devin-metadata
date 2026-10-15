@@ -4,6 +4,7 @@ export function devinPanes(reply) {
 }
 
 export function usageTokens(planStatus, now = Date.now()) {
+  const acu = acuRemainingToken(planStatus, now);
   const format = (remainingRaw, resetRaw, label) => {
     if (remainingRaw == null) return null;
     const remaining = Number(remainingRaw);
@@ -12,9 +13,26 @@ export function usageTokens(planStatus, now = Date.now()) {
     return `${label} ${Math.round(100 - Math.max(0, Math.min(100, remaining)))}%`;
   };
   return {
-    devin_daily_limit: format(planStatus?.dailyQuotaRemainingPercent, planStatus?.dailyQuotaResetAtUnix, 'day'),
-    devin_weekly_limit: format(planStatus?.weeklyQuotaRemainingPercent, planStatus?.weeklyQuotaResetAtUnix, 'week'),
+    devin_acu_remaining: acu,
+    devin_daily_limit: acu == null ? format(planStatus?.dailyQuotaRemainingPercent, planStatus?.dailyQuotaResetAtUnix, 'day') : null,
+    devin_weekly_limit: acu == null ? format(planStatus?.weeklyQuotaRemainingPercent, planStatus?.weeklyQuotaResetAtUnix, 'week') : null,
   };
+}
+
+function acuRemainingToken(planStatus, now) {
+  const number = value => {
+    if (typeof value !== 'number' && (typeof value !== 'string' || !value.trim())) return NaN;
+    return Number(value);
+  };
+  const limit = number(planStatus?.acuLimit);
+  const consumed = number(planStatus?.acuConsumed);
+  if (!Number.isFinite(limit) || limit <= 0 || !Number.isFinite(consumed) || consumed < 0) return null;
+  if (planStatus.planEnd != null) {
+    const end = typeof planStatus.planEnd === 'string' ? Date.parse(planStatus.planEnd) : NaN;
+    if (!Number.isFinite(end) || end <= now) return null;
+  }
+  const remaining = Number(Math.max(0, limit - consumed).toFixed(1));
+  return `ACU ${remaining} / ${limit} left`;
 }
 
 export function parseCredentials(text) {

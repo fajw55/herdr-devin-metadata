@@ -28,19 +28,19 @@ Add this Devin-specific layout to `~/.config/herdr/config.toml` (or adjust it to
 devin = [
   ["state_icon", "machine", "workspace", "tab"],
   ["agent", "$devin_model", "$devin_effort"],
-  ["$devin_daily_limit", "$devin_weekly_limit"],
+  ["$devin_acu_remaining", "$devin_daily_limit", "$devin_weekly_limit"],
 ]
 ```
 
 If the table already exists, add only the `devin = [...]` entry. This override replaces the complete default Agent layout for Devin, so include any built-in tokens you want to keep. Reload Herdr's config to apply it. Restart the Herdr server after installing or linking so the startup hook runs for existing panes; newly detected Devin panes trigger the plugin automatically.
 
-The plugin reports `devin_model`, `devin_daily_limit`, and `devin_weekly_limit`. The `devin_effort` token is reserved but currently empty because Devin CLI does not expose a reliable per-session effort value. Missing tokens and their separators disappear automatically. If Herdr detects a Devin pane without a session reference, account usage can still appear while the model remains blank.
+The plugin reports `devin_model`, `devin_acu_remaining`, `devin_daily_limit`, and `devin_weekly_limit`. ACU takes priority when a valid allowance and consumption reading are available; daily and weekly tokens are cleared. Otherwise, whichever daily and weekly readings are available appear. Include all three usage tokens in your layout to support both account types. The `devin_effort` token is reserved but currently empty because Devin CLI does not expose a reliable per-session effort value. Missing tokens and their separators disappear automatically. If Herdr detects a Devin pane without a session reference, account usage can still appear while the model remains blank.
 
 ## How it works
 
-The plugin starts one watcher per machine only while Herdr has a Devin pane. It checks panes every 10 seconds, reads each pane's model from Devin's local `sessions.db`, and makes one shared account quota request at most once per minute. It reports **consumed** percentages, such as `day 38% · week 62%`. The quota request uses Devin CLI's existing credentials in memory; the key is not stored or logged by this plugin.
+The plugin starts one watcher per machine only while Herdr has a Devin pane. It checks panes every 10 seconds, reads each pane's model from Devin's local `sessions.db`, and makes one shared account quota request at most once per minute. It reports remaining ACU, such as `ACU 199.2 / 200 left`, rounded to one decimal place. The allowance comes from the account response and is not fixed at 200. Accounts without valid ACU readings fall back to **consumed** daily and weekly percentages, such as `day 38% · week 62%`. The quota request uses Devin CLI's existing credentials in memory; the key is not stored or logged by this plugin.
 
-If quota cannot be refreshed, the last successful reading expires after three minutes or at the quota window's reset time, whichever comes first. The watcher stops when no Devin panes remain. No account request runs while there are no Devin panes.
+If quota cannot be refreshed, the last successful reading expires after three minutes or at the quota window's reset time, whichever comes first. ACU readings also expire at the account's billing period end when provided. The watcher stops when no Devin panes remain. No account request runs while there are no Devin panes.
 
 ## Develop
 
