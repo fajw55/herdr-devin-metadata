@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 
-test('watcher reports model and one shared quota reading to a Devin pane', async () => {
+async function checkWatcher(acu) {
   const root = await mkdtemp(join(tmpdir(), 'herdr-devin-worker-'));
   let child;
   try {
@@ -28,6 +28,7 @@ test('watcher reports model and one shared quota reading to a Devin pane', async
 globalThis.fetch = async () => {
   writeFileSync(process.env.TEST_FETCH_MARKER, '1');
   return { ok: true, json: async () => ({ userStatus: { planStatus: {
+    ${acu ? "acuLimit: 200, acuConsumed: 0.809125, planEnd: '2033-05-18T03:33:20Z'," : ''}
     dailyQuotaRemainingPercent: 62, weeklyQuotaRemainingPercent: 38,
     dailyQuotaResetAtUnix: 2000000000, weeklyQuotaResetAtUnix: 2000000000,
   } } }) };
@@ -55,11 +56,21 @@ else process.exit(1);
     }
     assert.ok(args, 'expected a Herdr metadata report');
     assert.ok(args.includes('devin_model=adaptive'));
-    assert.ok(args.includes('devin_daily_limit=day 38%'));
-    assert.ok(args.includes('devin_weekly_limit=week 62%'));
+    if (acu) {
+      assert.ok(args.includes('devin_acu_remaining=ACU 199.2 / 200 left'));
+      assert.ok(!args.some(arg => arg.startsWith('devin_daily_limit=')));
+      assert.ok(!args.some(arg => arg.startsWith('devin_weekly_limit=')));
+    } else {
+      assert.ok(args.includes('devin_daily_limit=day 38%'));
+      assert.ok(args.includes('devin_weekly_limit=week 62%'));
+    }
     assert.equal(await readFile(fetchMarker, 'utf8'), '1');
   } finally {
     child?.kill();
     await rm(root, { recursive: true, force: true });
   }
-});
+}
+
+for (const acu of [false, true]) {
+  test(`watcher reports model and shared ${acu ? 'ACU usage with priority over legacy quotas' : 'legacy quotas'} to a Devin pane`, () => checkWatcher(acu));
+}
