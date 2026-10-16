@@ -8,6 +8,7 @@ export async function callHerdr(bin, socket, args) {
     env: { ...process.env, HERDR_SOCKET_PATH: socket },
     timeout: 5000,
     maxBuffer: 8 * 1024 * 1024,
+    windowsHide: true,
   });
   return JSON.parse(stdout);
 }
