@@ -1,11 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { homedir, tmpdir } from 'node:os';
+import path, { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import { homedir } from 'node:os';
-import path from 'node:path';
 import { devinCredentialsPath, devinPanes, devinSessionsPath, parseCredentials, usageTokens } from '../src/core.js';
 import { fetchPlanStatus, readSessionModel } from '../src/devin.js';
 
