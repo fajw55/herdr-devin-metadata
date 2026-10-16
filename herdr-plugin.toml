@@ -1,6 +1,6 @@
 id = "herdr-devin-metadata"
 name = "Devin metadata"
-version = "0.1.0"
+version = "0.3.0"
 min_herdr_version = "0.9.0"
 description = "Show Devin CLI model and account quota in Agent sidebar rows"
 platforms = ["macos", "linux", "windows"]
