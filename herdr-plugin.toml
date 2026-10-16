@@ -3,11 +3,22 @@ name = "Devin metadata"
 version = "0.1.0"
 min_herdr_version = "0.9.0"
 description = "Show Devin CLI model and account quota in Agent sidebar rows"
-platforms = ["macos", "linux"]
+platforms = ["macos", "linux", "windows"]
 
 [[startup]]
 command = ["/bin/sh", "bin/start.sh"]
+platforms = ["macos", "linux"]
+
+[[startup]]
+command = ["node", "src/launch.js"]
+platforms = ["windows"]
 
 [[events]]
 on = "pane.agent_detected"
 command = ["/bin/sh", "bin/start.sh"]
+platforms = ["macos", "linux"]
+
+[[events]]
+on = "pane.agent_detected"
+command = ["node", "src/launch.js"]
+platforms = ["windows"]
