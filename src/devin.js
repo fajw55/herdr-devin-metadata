@@ -1,12 +1,9 @@
 import { readFile } from 'node:fs/promises';
-import { homedir } from 'node:os';
-import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import { parseCredentials } from './core.js';
+import { devinCredentialsPath, devinSessionsPath, parseCredentials } from './core.js';
 
-const dataHome = process.env.XDG_DATA_HOME ?? join(homedir(), '.local', 'share');
-export const credentialsPath = process.env.DEVIN_CREDENTIALS_PATH ?? join(dataHome, 'devin', 'credentials.toml');
-export const sessionsPath = process.env.DEVIN_SESSIONS_DB ?? join(dataHome, 'devin', 'cli', 'sessions.db');
+export const credentialsPath = process.env.DEVIN_CREDENTIALS_PATH ?? devinCredentialsPath(process.platform, process.env);
+export const sessionsPath = process.env.DEVIN_SESSIONS_DB ?? devinSessionsPath(process.platform, process.env);
 
 export async function readDevinCredentials(path = credentialsPath) {
   return parseCredentials(await readFile(path, 'utf8'));
