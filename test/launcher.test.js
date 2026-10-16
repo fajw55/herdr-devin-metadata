@@ -6,7 +6,11 @@ import { dirname, join } from 'node:path';
 
 const root = join(import.meta.dirname, '..');
 
-test('Herdr can start the plugin with a minimal GUI PATH', () => {
+test('Herdr can start the plugin with a minimal GUI PATH', {
+  skip: process.platform === 'win32'
+    ? 'bin/start.sh is POSIX-only; Windows uses a direct "node src/launch.js" startup command instead (see test/launch.test.js)'
+    : false,
+}, () => {
   const manifest = readFileSync(join(root, 'herdr-plugin.toml'), 'utf8');
   const command = manifest.match(/\[\[startup\]\]\s*command = (\[[^\n]+\])/);
   assert.ok(command, 'startup command is declared');

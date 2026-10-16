@@ -71,6 +71,13 @@ else process.exit(1);
   }
 }
 
+const windowsSkipReason = 'fake-herdr test fixture is a Unix shebang script executed via execFile with no shell; '
+  + 'shell:true is not an acceptable workaround because Node concatenates array args unescaped on Windows (DEP0190)';
+
 for (const acu of [false, true]) {
-  test(`watcher reports model and shared ${acu ? 'ACU usage with priority over legacy quotas' : 'legacy quotas'} to a Devin pane`, () => checkWatcher(acu));
+  test(
+    `watcher reports model and shared ${acu ? 'ACU usage with priority over legacy quotas' : 'legacy quotas'} to a Devin pane`,
+    { skip: process.platform === 'win32' ? windowsSkipReason : false },
+    () => checkWatcher(acu),
+  );
 }

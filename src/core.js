@@ -1,3 +1,6 @@
+import { homedir } from 'node:os';
+import path from 'node:path';
+
 export function devinPanes(reply) {
   const panes = reply?.result?.panes ?? reply?.panes ?? [];
   return panes.filter(pane => String(pane.agent ?? '').toLowerCase() === 'devin' && (pane.pane_id ?? pane.id));
@@ -46,4 +49,19 @@ export function parseCredentials(text) {
   const url = new URL(fields.api_server_url);
   if (url.protocol !== 'https:') throw new Error('Devin API URL must use HTTPS');
   return { apiServerUrl: url.toString().replace(/\/$/, ''), apiKey: fields.windsurf_api_key };
+}
+
+function devinDataHome(platform, env) {
+  if (platform === 'win32') return env.APPDATA ?? path.win32.join(homedir(), 'AppData', 'Roaming');
+  return env.XDG_DATA_HOME ?? path.posix.join(homedir(), '.local', 'share');
+}
+
+export function devinCredentialsPath(platform, env) {
+  const home = devinDataHome(platform, env);
+  return platform === 'win32' ? path.win32.join(home, 'Devin', 'credentials.toml') : path.posix.join(home, 'devin', 'credentials.toml');
+}
+
+export function devinSessionsPath(platform, env) {
+  const home = devinDataHome(platform, env);
+  return platform === 'win32' ? path.win32.join(home, 'Devin', 'cli', 'sessions.db') : path.posix.join(home, 'devin', 'cli', 'sessions.db');
 }

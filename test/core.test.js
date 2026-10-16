@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { homedir, tmpdir } from 'node:os';
+import path, { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import { devinPanes, parseCredentials, usageTokens } from '../src/core.js';
+import { devinCredentialsPath, devinPanes, devinSessionsPath, parseCredentials, usageTokens } from '../src/core.js';
 import { fetchPlanStatus, readSessionModel } from '../src/devin.js';
 
 test('only Devin panes are selected from Herdr', () => {
@@ -98,4 +98,38 @@ test('quota request uses Devin account endpoint without exposing credentials in 
   assert.equal(requested.url, 'https://example.test/exa.seat_management_pb.SeatManagementService/GetUserStatus');
   assert.equal(requested.metadata.api_key, 'test-secret');
   assert.deepEqual(usageTokens(plan), { devin_acu_remaining: null, devin_daily_limit: 'day 28%', devin_weekly_limit: 'week 51%' });
+});
+
+test('devin credentials and sessions paths use platform-specific locations', () => {
+  assert.equal(
+    devinCredentialsPath('win32', { APPDATA: 'C:\\Users\\jan\\AppData\\Roaming' }),
+    'C:\\Users\\jan\\AppData\\Roaming\\Devin\\credentials.toml',
+  );
+  assert.equal(
+    devinSessionsPath('win32', { APPDATA: 'C:\\Users\\jan\\AppData\\Roaming' }),
+    'C:\\Users\\jan\\AppData\\Roaming\\Devin\\cli\\sessions.db',
+  );
+  assert.equal(
+    devinCredentialsPath('linux', { XDG_DATA_HOME: '/home/jan/.data' }),
+    '/home/jan/.data/devin/credentials.toml',
+  );
+  assert.equal(
+    devinSessionsPath('darwin', { XDG_DATA_HOME: '/home/jan/.data' }),
+    '/home/jan/.data/devin/cli/sessions.db',
+  );
+});
+
+test('devin paths fall back to the home directory when APPDATA or XDG_DATA_HOME are unset', () => {
+  assert.equal(
+    devinCredentialsPath('win32', {}),
+    path.win32.join(homedir(), 'AppData', 'Roaming', 'Devin', 'credentials.toml'),
+  );
+  assert.equal(
+    devinSessionsPath('win32', {}),
+    path.win32.join(homedir(), 'AppData', 'Roaming', 'Devin', 'cli', 'sessions.db'),
+  );
+  assert.equal(
+    devinCredentialsPath('linux', {}),
+    path.posix.join(homedir(), '.local', 'share', 'devin', 'credentials.toml'),
+  );
 });
