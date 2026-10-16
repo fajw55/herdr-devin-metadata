@@ -4,7 +4,7 @@ Shows Devin CLI's session model and account usage in Herdr's Agent sidebar. The 
 
 > **Personal-use notice:** This plugin was vibe coded for my own use. It may have rough edges. I do not plan to provide support or fix issues that do not affect my own use.
 >
-> **Platform support:** macOS and Linux only. Tested only on macOS; Linux has not been tested.
+> **Platform support:** macOS, Linux, and Windows. Tested only on macOS; Linux and Windows have not been tested.
 
 ## Requirements
 
@@ -40,6 +40,8 @@ The plugin reports `devin_model`, `devin_acu_remaining`, `devin_daily_limit`, an
 
 The plugin starts one watcher per machine only while Herdr has a Devin pane. It checks panes every 10 seconds, reads each pane's model from Devin's local `sessions.db`, and makes one shared account quota request at most once per minute. It reports remaining ACU, such as `ACU 199.2 / 200 left`, rounded to one decimal place. The allowance comes from the account response and is not fixed at 200. Accounts without valid ACU readings fall back to **consumed** daily and weekly percentages, such as `day 38% · week 62%`. The quota request uses Devin CLI's existing credentials in memory; the key is not stored or logged by this plugin.
 
+On macOS and Linux, Devin's credentials and `sessions.db` are read from `$XDG_DATA_HOME/devin/` (or `~/.local/share/devin/` by default). On Windows, they're read from `%APPDATA%\Devin\` instead - `%APPDATA%\Devin\credentials.toml` and `%APPDATA%\Devin\cli\sessions.db`. Both can still be overridden with the `DEVIN_CREDENTIALS_PATH` and `DEVIN_SESSIONS_DB` environment variables.
+
 If quota cannot be refreshed, the last successful reading expires after three minutes or at the quota window's reset time, whichever comes first. ACU readings also expire at the account's billing period end when provided. The watcher stops when no Devin panes remain. No account request runs while there are no Devin panes.
 
 ## Develop
@@ -48,7 +50,7 @@ If quota cannot be refreshed, the last successful reading expires after three mi
 npm test
 ```
 
-There are no package dependencies or build step. The launcher searches common Node.js locations if Herdr starts with a limited GUI PATH. Set `HERDR_DEVIN_EXTRA_PATH` in Herdr's environment if Node.js is elsewhere.
+There are no package dependencies or build step. The launcher searches common Node.js locations if Herdr starts with a limited GUI PATH. Set `HERDR_DEVIN_EXTRA_PATH` in Herdr's environment if Node.js is elsewhere. This PATH-searching fallback is macOS/Linux-only (`bin/start.sh`); on Windows, Herdr runs `node src/launch.js` directly, so Node.js must already be on `PATH` for whatever process starts Herdr there - true for a normal terminal-launched Herdr.
 
 The plugin stores only a server registry and process lock in `HERDR_PLUGIN_STATE_DIR`, outside the source directory. It has no dedicated log file; inspect Herdr's records with `herdr plugin log list --plugin herdr-devin-metadata`.
 
